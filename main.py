@@ -4,6 +4,7 @@ import os
 from aiogram import Bot, Dispatcher, html, F
 from aiogram.filters import CommandStart
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, FSInputFile
+from aiohttp import web
 
 TOKEN = "8335473611:AAEiyemFmSG3RzJ0V9Au9zyTLkaAr45qbjI"
 
@@ -126,16 +127,29 @@ async def process_profile(callback: CallbackQuery):
         f"👤 {html.bold('ВАШ КОММЕРЧЕСКИЙ ПРОФИЛЬ')}\n\n"
         f"🆔 Ваш ID: {html.code(callback.from_user.id)}\n"
         f"👤 Ник: @{callback.from_user.username if callback.from_user.username else 'Не установлен'}\n"
-        f"💰 Игровой баланс: {html.bold('0₽ (в разработке)')}\n\n"
+        f"💰 Игровой баланс: {html.bold('11734.53 ₽')}\n\n"
         f"🚀 {html.italic('Спасибо, что выбираете качество от Astrix Store!')}\n\n"
-        f"🤫 {html.italic('Создам тебе любой бот в телеге пиши @rouap')}"
+        f"🤫 {html.italic('Создам тебе любой бот пиши @rouap')}"
     )
     await callback.message.delete()
     await bot.send_message(chat_id=callback.message.chat.id, text=profile_text, reply_markup=get_profile_menu(), parse_mode="HTML")
     await callback.answer()
 
+async def handle_render_health(request):
+    return web.Response(text="OK")
+
 async def main():
     await bot.delete_webhook(drop_pending_updates=True)
+    
+    app = web.Application()
+    app.router.add_get("/", handle_render_health)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    
+    port = int(os.environ.get("PORT", 10000))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    asyncio.create_task(site.start())
+    
     print("=== Bot Started ===")
     await dp.start_polling(bot)
 
